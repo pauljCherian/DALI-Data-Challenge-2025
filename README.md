@@ -1,41 +1,22 @@
-# DALI Data Challenge 2025
+**Problem: Count the number of barnacles in an image**
 
-## Problem: Count the number of barnacles in an image
+A simple to understand, but difficult problem to solve. My notebook below takes a model-based approach to solving the challenge. While I think that an end-to-end model that accurately count barnacles is acheivable, it ended up being much more difficult than I expected. I experiment with traditinoal CV techniques of chunking, thresholding, binarization, and contour detection, as well as SOTA methods using Meta's SAM. 
 
-A simple-to-understand but difficult problem to solve. This notebook takes a model-based approach to tackling the challenge. While an end-to-end model that accurately counts barnacles seems achievable, it turned out to be much more difficult than expected. The notebook experiments with traditional computer vision techniques—such as chunking, thresholding, binarization, and contour detection—as well as state-of-the-art methods using Meta's SAM (Segment Anything Model).
+If I were to progress this project with more time, there are several avenues I think would bear fruit, both to improve on my implementation of a method, and to try others. I make a distinction and describe below:
 
-## Future Directions
+**Improvements to Implementation of Current Methods** 
+1.   *Define improved metrics to evaluate the quality of classifers.* This is an incredibly important part of the ML engineering pipeline that I only scratched the surface of during my work. I define 4 total metrics with which I can evaluate my model. The first (naive) approach is a pure comparison based on barnacles counted. The 2nd, 3rd, and 4th are more sophisticated (and faithful) metrics of Intersection over Union (IoU), Dice, and Accuracy. As I will mention later, each of these metrics demonstrate a different view of the quality of the model.
+2. *Experiment with SAM prompting instead of automatic mask detection.* This is another implementation improvement that I think would bear fruit in improving performance. In the notebook, I use SAM's automatic mask detection, tuned with several hyperparameters that define how the segmentor should operate on our specific image. The biggest issue in this implementation is that SAM finely masks everything in the image, including non-barnacle objects. This leads to a gross overcounting (and increased union) of masks in the image. I think traditional CV methods could be used to filter out some of these erroneous masks —  barnacles tend to be convex, of a certain minimum area, and certainly simply connected (unlike a torus shape). As shown below, the current SAM segmentor has a huge swath of non-barnacle masks. Accordingly, the metrics on it show it has poor performance. 
+To rememdy this, SAM allows for object mask [prompting](https://github.com/facebookresearch/segment-anything/blob/main/notebooks/predictor_example.ipynb), by specifying a pixel location which is of the object it should segment. If one could roughly do this for barnacles in the image, I think SAM would have a much higher precision on barnacle masks. 
+3. *More CV techniques and pre-processing.* Barnacles' color, size, shape, and specific features make them extremely identifiable to humans. Though I use several traditional CV techniques, I am sure there are more that I have not experimented with that would make simple contour detection or feature detection for ML models much better.
 
-If given more time to progress this project, several avenues could improve both the implementation of the current methods and the exploration of alternative approaches. Below, these are outlined:
 
-### Improvements to Implementation of Current Methods
-1. **Define improved metrics to evaluate the quality of classifiers.**  
-   Metrics are a critical part of the ML engineering pipeline, which was only partially addressed in this project. Four total metrics are defined to evaluate the model:
-   - Naive comparison based on barnacle counts.
-   - Intersection over Union (IoU).
-   - Dice coefficient.
-   - Accuracy.  
-   Each metric provides a unique view of model quality.
+**Alternative Methods** 
 
-2. **Experiment with SAM prompting instead of automatic mask detection.**  
-   The current implementation uses SAM's automatic mask detection, tuned with several hyperparameters. However, this approach results in SAM masking everything in the image, including non-barnacle objects, leading to overcounting and reduced precision.  
-   Potential improvements include:
-   - Using traditional CV techniques to filter non-barnacle objects (e.g., by leveraging convexity, area thresholds, and connectivity).  
-   - Utilizing SAM's object mask [prompting](https://github.com/facebookresearch/segment-anything/blob/main/notebooks/predictor_example.ipynb), which allows for segmentation based on specified pixel locations. Prompting SAM for barnacle masks could significantly increase precision.
 
-3. **Explore additional CV techniques and preprocessing methods.**  
-   Barnacles are visually identifiable by their color, size, shape, and other features. While several traditional CV techniques were applied, more could be explored to improve contour detection or feature extraction for ML models.
+1. **Model-based approach:** *Though I tried two extremes from classic CV to pretrained SOTA SAM, I think a traditional ML approach might also be worth attempting.* As mentioned, barnacles have several characteristics that make them identifiable. The reason why the two prior approaches were relatively good fits for this problem was because we did not have an abundance of data to train a prior generation ML model on. But I think there are potential solutions to this issue. Specifically, my idea is to crop the segmentations we do have with a radius of 40 or so pixels around them, to curate a dataset of thousands of barnacles that could then be used to train a more traditional CNN or sklearn classifier. Potentially impementation challenges about what to do with overlapping barnacles and what to use as negative examples exist, but nonetheless I think it is a promising idea.
+2. **Visualization based approach:** it's worth considering that a model simply predicting the total number of barnacles in an image may not be the best way to solve the core challenge. If these statistics are especially important, would there even be enough trust from organizations to use the model? What other information do scientists gain from the process of annotating barnacles? Do they scan for disease, sickness, mutation, or other ecological observations that come from manually inspecting barnacles? These are all worthy questions to ask which might lead to a non-model-based approach actually being better. This might be a visualization tool that makes annotation much easier for the biologists, a triaging system that allocates the least confident barnacle segmentations to human annotators, or something that can point out anomalous portions of an image that require a ecological follow-up. This all goes much farther than the black-box model that spits out an integer of barnacles from an image. It would be worth discussing with the clients what solution they think would best augment their workflow.
 
-### Alternative Methods
-1. **Model-based approach:**  
-   A traditional ML approach might also be worth attempting. Barnacles have distinct visual characteristics that could be leveraged by models such as CNNs or other classifiers. While the dataset used in this project was limited, one solution could involve curating a dataset by cropping existing segmentations with a fixed radius (e.g., 40 pixels). Challenges such as handling overlapping barnacles and selecting appropriate negative examples exist but are surmountable.
 
-2. **Visualization-based approach:**  
-   Predicting the total number of barnacles might not be the best way to address the core challenge. Important considerations include:  
-   - How much trust would organizations place in a model outputting only an integer?  
-   - Are additional insights (e.g., signs of disease, sickness, or mutation) gained through manual barnacle annotation?  
-   Alternative solutions could involve:  
-   - Visualization tools to ease the annotation process for biologists.  
-   - A triaging system to flag the least confident segmentations for human review.  
-   - Tools to highlight anomalous image portions that require ecological follow-up.  
-   Such solutions might augment workflows more effectively than a black-box counting model.
+
+
