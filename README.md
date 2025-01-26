@@ -1,4 +1,4 @@
-**DALI Data Challenge 2025** 
+# DALI Data Challenge 2025
 
 Problem: Count the number of barnacles in an image
 A simple to understand, but difficult problem to solve. My notebook below takes a model-based approach to solving the challenge. While I think that an end-to-end model that accurately count barnacles is acheivable, it ended up being much more difficult than I expected. I experiment with traditinoal CV techniques of chunking, thresholding, binarization, and contour detection, as well as SOTA methods using Meta's SAM. 
